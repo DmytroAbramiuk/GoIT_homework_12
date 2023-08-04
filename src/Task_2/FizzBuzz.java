@@ -1,72 +1,69 @@
 package Task_2;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Consumer;
-import java.util.stream.IntStream;
-import java.util.stream.Stream;
+public class FizzBuzz {
 
-public class FizzBuzz extends Thread {
+    private int n;
+    private int currentN;
 
-    private Consumer<Integer> consumer;
-
-    private AtomicBoolean isNumberProcessed = new AtomicBoolean(false);
-
-    private Integer number;
-
-    public FizzBuzz(Consumer<Integer> consumer) {
-        this.consumer = consumer;
+    public FizzBuzz(int n) {
+        this.n = n;
+        this.currentN = 1;
     }
 
-    public void setNumber(int number) {
-        this.number = number;
-        isNumberProcessed.set(false);
+    private void incrementAndNotify(){
+        currentN++;
+        notifyAll();
     }
 
-    @Override
-    public void run() {
-        while (true) {
-            if (!isNumberProcessed.get()) {
-                consumer.accept(number);
-                isNumberProcessed.set(true);
+    private void makeWait(){
+        try {
+            wait();
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public synchronized void fizz(){
+        while(currentN <= n){
+            if(currentN % 3 == 0 && currentN % 5 != 0){
+                System.out.println("fizz");
+                incrementAndNotify();
+            } else {
+                makeWait();
             }
         }
     }
 
-    public static void main(String[] args) {
-        ExecutorService executorService = Executors.newFixedThreadPool(4);
-        int counter;
-
-        FizzBuzz fizz = new FizzBuzz((counter) -> {
-            if (counter % 3 == 0)
-                System.out.println("fizz");
-        });
-
-        FizzBuzz buzz = new FizzBuzz((counter) -> {
-            if (counter % 5 == 0)
+    public synchronized void buzz(){
+        while(currentN <= n){
+            if(currentN % 5 == 0 && currentN % 3 != 0){
                 System.out.println("buzz");
-        });
+                incrementAndNotify();
+            } else {
+                makeWait();
+            }
+        }
+    }
 
-        FizzBuzz fizzBuzz = new FizzBuzz((counter) -> {
-            if (counter % 3 == 0 && counter % 5 == 0)
-                System.out.println("fizzbuzz");
-        });
+    public synchronized void fizzBuzz(){
+        while(currentN <= n){
+            if(currentN % 5 == 0 && currentN % 3 == 0){
+                System.out.println("fizzBuzz");
+                incrementAndNotify();
+            } else {
+                makeWait();
+            }
+        }
+    }
 
-        FizzBuzz notFizzBuzz = new FizzBuzz((counter) -> {
-            if (counter % 3 != 0 && counter % 5 != 0)
-                System.out.println(counter);
-        });
-
-
-        for(int i = 0; i<15; i++){
-            counter = i;
-            executorService.execute(fizz);
-            executorService.execute(buzz);
-            executorService.execute(fizzBuzz);
-            executorService.execute(notFizzBuzz);
+    public synchronized void notFizzBuzz(){
+        while(currentN <= n){
+            if(currentN % 5 != 0 && currentN % 3 != 0){
+                System.out.println(currentN);
+                incrementAndNotify();
+            } else {
+                makeWait();
+            }
         }
     }
 }
